@@ -1,1 +1,115 @@
-<mxfile host="app.diagrams.net" modified="2021-02-23T16:28:13.914Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.111 YaBrowser/21.2.1.107 Yowser/2.5 Safari/537.36" version="14.4.2" etag="q6gX0nt4Zs3X5BLzZ10c" type="github"><diagram id="Yq2bLkGjzxzbEp4Oomex">UzV2zq1wL0osyPDNT0nNUTV2VTV2LsrPL4GwciucU3NyVI0MMlNUjV1UjYwMgFjVyA2HrCFY1qAgsSg1rwSLBiADYTaQg2Y1AA==</diagram></mxfile>
+<mxfile host="app.diagrams.net" modified="2021-02-23T16:56:53.612Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.111 YaBrowser/21.2.1.107 Yowser/2.5 Safari/537.36" etag="jqieCvXPQ7P4ApYsvc7q" version="14.4.2" type="github">
+  <diagram id="Yq2bLkGjzxzbEp4Oomex" name="Page-1">
+    <mxGraphModel dx="1209" dy="671" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BG1YtrIywF7ZwlYFcCXK-1" target="BG1YtrIywF7ZwlYFcCXK-22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BG1YtrIywF7ZwlYFcCXK-1" target="BG1YtrIywF7ZwlYFcCXK-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-1" value="Нахождение потерянной вещи" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="440" width="110" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-2" value="Потерявший" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="240" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-11" value="Сотрудник поиска" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="360" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-21" value="Расположение на складе" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="350" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-22" value="Занесение вещи в базу данных" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="520" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BG1YtrIywF7ZwlYFcCXK-23" target="BG1YtrIywF7ZwlYFcCXK-22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-53" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BG1YtrIywF7ZwlYFcCXK-23" target="BG1YtrIywF7ZwlYFcCXK-51">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-23" value="Технический специалист" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="610" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BG1YtrIywF7ZwlYFcCXK-24" target="BG1YtrIywF7ZwlYFcCXK-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-54" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BG1YtrIywF7ZwlYFcCXK-24" target="BG1YtrIywF7ZwlYFcCXK-33">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-24" value="Кладовщик" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="300" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-52" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="BG1YtrIywF7ZwlYFcCXK-33" target="BG1YtrIywF7ZwlYFcCXK-51">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-33" value="Возврат вещи со склада" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="687" y="440" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-36" value="Нашедший" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="510" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-43" value="extend" style="endArrow=open;endSize=12;dashed=1;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="BG1YtrIywF7ZwlYFcCXK-1">
+          <mxGeometry x="0.1453" y="10" width="160" relative="1" as="geometry">
+            <mxPoint x="180" y="389.5" as="sourcePoint" />
+            <mxPoint x="340" y="389.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="230" y="390" />
+              <mxPoint x="230" y="420" />
+              <mxPoint x="230" y="475" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-45" value="extend" style="endArrow=open;endSize=12;dashed=1;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="BG1YtrIywF7ZwlYFcCXK-1">
+          <mxGeometry x="-0.0968" y="-10" width="160" relative="1" as="geometry">
+            <mxPoint x="180" y="539.5" as="sourcePoint" />
+            <mxPoint x="270" y="470" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="230" y="540" />
+              <mxPoint x="230" y="475" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-46" value="extend" style="endArrow=open;endSize=12;dashed=1;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" target="BG1YtrIywF7ZwlYFcCXK-33">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="180" y="269.5" as="sourcePoint" />
+            <mxPoint x="340" y="269.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="720" y="270" />
+              <mxPoint x="757" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-51" value="Удаление вещи из базы данных" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="687" y="605" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-58" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BG1YtrIywF7ZwlYFcCXK-55" target="BG1YtrIywF7ZwlYFcCXK-51">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="615" y="540" />
+              <mxPoint x="757" y="540" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-55" value="Передача вещи на аукцион" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="445" width="110" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="BG1YtrIywF7ZwlYFcCXK-57" value="extend" style="endArrow=open;endSize=12;dashed=1;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" target="BG1YtrIywF7ZwlYFcCXK-55">
+          <mxGeometry x="0.5143" width="160" relative="1" as="geometry">
+            <mxPoint x="380" y="329.5" as="sourcePoint" />
+            <mxPoint x="610" y="330" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="615" y="330" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
