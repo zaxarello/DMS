@@ -17,17 +17,34 @@ public class Electro {
     public double compare(Alternative alternative1, Alternative alternative2) {
         int first = 0;
         int second = 0;
+        System.out.println();
         for (Map.Entry<String, Integer> entry : weight.entrySet()) {
             boolean height = alternative1.getHeight(entry.getKey());
-            if (height && alternative1.getCount(entry.getKey()) > alternative2.getCount(entry.getKey()) || !height && alternative1.getCount(entry.getKey()) < alternative2.getCount(entry.getKey()))
+            if (height && alternative1.getCount(entry.getKey()) > alternative2.getCount(entry.getKey())
+                    || !height && alternative1.getCount(entry.getKey()) < alternative2.getCount(entry.getKey())) {
                 first += entry.getValue();
-            else if (height && alternative1.getCount(entry.getKey()) < alternative2.getCount(entry.getKey()) || !height && alternative1.getCount(entry.getKey()) > alternative2.getCount(entry.getKey()))
+                if (alternative1.getHeight(entry.getKey()))
+                    System.out.println("Критерий " + entry.getKey() + " возрастающий критерий");
+                else
+                    System.out.println("Критерий " + entry.getKey() + " убывающий критерий");
+                System.out.println("Альтернатива " + alternative1.getName() + " выигрывает по критерию "
+                        + entry.getKey() + " (" + alternative1.getCount(entry.getKey()) + " > " +
+                        alternative2.getCount(entry.getKey()) + ") " + " и получает " + entry.getValue() + " баллов");
+            } else if (height && alternative1.getCount(entry.getKey()) < alternative2.getCount(entry.getKey()) || !height && alternative1.getCount(entry.getKey()) > alternative2.getCount(entry.getKey())) {
                 second += entry.getValue();
+                if (alternative1.getHeight(entry.getKey()))
+                    System.out.println("Критерий " + entry.getKey() + " возрастающий критерий");
+                else
+                    System.out.println("Критерий " + entry.getKey() + " убывающий критерий");
+                System.out.println("Альтернатива " + alternative2.getName() + " выигрывает по критерию "
+                        + entry.getKey() + " (" + alternative2.getCount(entry.getKey()) + " > " +
+                        alternative1.getCount(entry.getKey()) + ") " + " и получает " + entry.getValue() + " баллов");
+            }
         }
+        System.out.println(alternative1.getName() + " = " + first + ", " + alternative2.getName() + " = " + second);
+        System.out.println();
         if (first == second)
             return 1;
-        else if (second == 0)
-            return -1;
         return (double) first / second;
     }
 
@@ -39,12 +56,13 @@ public class Electro {
             matrix[i][i] = -2;
             for (int j = i; j < alternatives.size(); j++) {
                 double result = electro.compare(alternatives.get(i), alternatives.get(j));
-                if (result == -1 || result > 1) {
-                    matrix[i][j] = result;
-                    matrix[j][i] = -2;
-                } else if (result == 1) {
+                if (result == 1) {
                     matrix[i][j] = 1;
                     matrix[j][i] = 1;
+                }
+                else if (result > 1) {
+                    matrix[i][j] = result;
+                    matrix[j][i] = -2;
                 } else {
                     matrix[i][j] = -2;
                     matrix[j][i] = 1 / result;
