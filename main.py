@@ -14,6 +14,10 @@ def mai(path_to_dir, file, fileResult):
         criteria_num[list(df1)[i].split("(")[0]] = (int((list(df1)[i].split("(")[1].split(")")[0])))
     criteria_table = pairwise_comparison(criteria_num, 9)
     criteria_matrix = np.array(compute_w(criteria_table, "Критерии"))
+    if not consistency_check(criteria_table, criteria_matrix, 1.12):
+        return
+    print("Матрица согласована")
+    print("-------------")
     writer = pd.ExcelWriter(fileResult, engine='xlsxwriter')
     DataFrame(criteria_table).to_excel(writer, index=False)
     start_row = len(df1) + 2
@@ -25,7 +29,12 @@ def mai(path_to_dir, file, fileResult):
         alternative_table = pairwise_comparison(alternative_num, 9, list(df1)[crit])
         DataFrame(alternative_table).to_excel(writer, startrow=start_row,
                                               index=False)
-        alternative_matrix_buffer.append(compute_w(alternative_table, list(df1)[crit]))
+        ws = compute_w(alternative_table, list(df1)[crit])
+        alternative_matrix_buffer.append(ws)
+        if not consistency_check(alternative_table, ws, 1.12):
+            return
+        print("Матрица согласована")
+        print("-------------")
         start_row += len(df1[list(df1)[0]]) + 2
     writer.save()
     alternative_matrix = np.array(alternative_matrix_buffer).transpose()
@@ -46,9 +55,11 @@ def compute_w(dic, name="-"):
     buf_res = []
     sum_of_sum = 0
     for i in range(len(dic[list(dic)[0]])):
-        sum = 0
+        sum = 1
         for j in range(1, len(dic)):
-            sum += dic[list(dic)[j]][i]
+            sum *= dic[list(dic)[j]][i]
+        sum **= (1/5)
+        sum = round(sum, 3)
         buf_res.append(sum)
         sum_of_sum += sum
     res = []
@@ -56,8 +67,21 @@ def compute_w(dic, name="-"):
         buf = buf_res[i] / sum_of_sum
         print(name, " W", i, ": ", buf)
         res.append(buf_res[i] / sum_of_sum)
-    print("-------------")
     return res
+
+
+def consistency_check(dic, ws, randIndex):
+    sum_of_sum = 0
+    for j in range(1, len(dic)):
+        sum = 0
+        for i in range(len(dic[list(dic)[0]])):
+            sum += dic[list(dic)[j]][i]
+        sum *= ws[j-1]
+        print("P", j, ": ", sum)
+        sum_of_sum += sum
+    index = (sum_of_sum - len(dic) + 1)/(len(dic) - 2)
+    print("OC: ", (index / randIndex))
+    return (index / randIndex) <= 0.1
 
 
 def pairwise_comparison(dict2, normalization, name1="-"):
