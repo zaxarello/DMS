@@ -1,107 +1,124 @@
 import pandas as pd
-import os
-import numpy as np
-
-from pandas import DataFrame
+import xlsxwriter
 
 
-def mai(path_to_dir, file, fileResult):
-    os.chdir(path_to_dir)
-    xl = pd.ExcelFile(file)
+def simplex_recurs(df):
+    # Вычисляем разрешающий столбец
+    print(df)
+    print()
+    min = 0
+    column = ""
+    for i in range(1, len(df) - 2):
+        key = list(df)[i]
+        mass = df[key]
+        if mass[len(mass) - 1] < min:
+            min = mass[len(mass) - 1]
+            column = key
+    print("Число", min, "является минимальной отрицательной относительной оценкой. Находится в столбце", column)
+    print()
+    # Вычисляем разрешающую строку
+    massA = df["A"]
+    massColumn = df[column]
+    raw = 0
+    min = -1
+    for i in range(len(massA) - 1):
+        if float(massColumn[i]) <= 0:
+            continue
+        num = float(massA[i]) / float(massColumn[i])
+        if min == -1 or num < min:
+            min = num
+            raw = i
+    print("Отношение элемента А столбца к элементу разрешающего столбца равное", min, "является минимальным "
+                                                                                      "положительным отношением. "
+                                                                                      "Следовательно строка под "
+                                                                                      "номером", raw + 1,
+          "является разрешающей строкой.")
+    print()
+    if min == -1:
+        raise Exception("Целевая функция не ограничена")
+    resolution_element = df[column][raw]
+    print("Число", resolution_element, "является разрешающим элементом")
+    print()
+    # column - ключ разрещающего столбца, raw - номер разрещающей строки, resolution_element - разрещающий элемент
+    # Формируем новую таблицу
+    newDf = dict()
+    # Заолняем первый столбец
+    newDf["C"] = []
+    for i in range(len(massA) - 1):
+        if i == raw:
+            newDf["C"].append(column)
+        else:
+            newDf["C"].append(df["C"][i])
+    newDf["C"].append("F")
+    final = True
+    # Заполняем остальные строки
+    for key in df:
+        if key == "C":
+            continue
+        # Отдельно заполняем разрещающий столбец
+        if key == column:
+            newDf[df["C"][raw]] = []
+            for i in range(len(df[key])):
+                # Отдельно заполняем разрещающий элемент
+                if i == raw:
+                    print("Для столбца", key, "и строки под номером", i + 1,
+                          "вычисляем новый элемент через деление разрешающего элемента на единицу. 1 /",
+                          df[key][i], " =", 1 / df[key][i])
+                    print()
+                    newDf[df["C"][raw]].append(1 / df[key][i])
+                else:
+                    print("Для столбца", key, "и строки под номером", i + 1,
+                          "вычисляем новый элемент через деление элемента на разрешающий элемент и изменение знака. 0 -",
+                          df[key][i], " /", resolution_element, " =", 0 - df[key][i] / resolution_element)
+                    print()
+                    newDf[df["C"][raw]].append(0 - df[key][i] / resolution_element)
+                if i == len(df[key]) - 1 and newDf[df["C"][raw]][i] < 0:
+                    final = False
+        else:
+            newDf[key] = []
+            for i in range(len(df[key])):
+                # Отдельно заполняем разрещающую строку
+                if i == raw:
+                    print("Для столбца", key, "и строки под номером", i + 1,
+                          "вычисляем новый элемент через деление элемента на разрешающий элемент.",
+                          df[key][i], " /", resolution_element, " =", df[key][i] / resolution_element)
+                    print()
+                    newDf[key].append(df[key][i] / resolution_element)
+                # Заполняем все остальные элементы через прямоугольник
+                else:
+                    print("Для столбца", key, "и строки под номером", i + 1,
+                          "вычисляем новый элемент через правило прямоугольника. Получаем ",
+                          (df[key][i] * resolution_element - df[column][i] * df[key][raw]) / resolution_element)
+                    print()
+                    newDf[key].append(
+                        (df[key][i] * resolution_element - df[column][i] * df[key][raw]) / resolution_element)
+                if i == len(df[key]) - 1 and key != "A" and newDf[key][i] < 0:
+                    final = False
+    res = [pd.DataFrame(newDf)]
+    if final:
+        return res
+    # Если остались отрицательные дельты, то продолжаем выполнение
+    print()
+    print()
+    print("------------------------------------------")
+    print()
+    print()
+    res.extend(simplex_recurs(pd.DataFrame(newDf)))
+    return res
+
+
+def simplex(fileStart, fileResult):
+    xl = pd.ExcelFile(fileStart)
     df1 = xl.parse(xl.sheet_names[0])
-    criteria_num = dict()
-    for i in range(1, len(df1) + 1):
-        criteria_num[list(df1)[i].split("(")[0]] = (int((list(df1)[i].split("(")[1].split(")")[0])))
-    criteria_table = pairwise_comparison(criteria_num, 9)
-    criteria_matrix = np.array(compute_w(criteria_table, "Критерии"))
-    if not consistency_check(criteria_table, criteria_matrix, 1.12):
-        return
-    print("Матрица согласована")
-    print("-------------")
+    res = simplex_recurs(df1)
     writer = pd.ExcelWriter(fileResult, engine='xlsxwriter')
-    DataFrame(criteria_table).to_excel(writer, index=False)
+    df1.to_excel(writer, index=False)
     start_row = len(df1) + 2
-    alternative_matrix_buffer = []
-    for crit in range(1, len(df1) + 1):
-        alternative_num = dict()
-        for alternative in range(len(df1[list(df1)[0]])):
-            alternative_num[df1[list(df1)[0]][alternative]] = df1[list(df1)[crit]][alternative]
-        alternative_table = pairwise_comparison(alternative_num, 9, list(df1)[crit])
-        DataFrame(alternative_table).to_excel(writer, startrow=start_row,
-                                              index=False)
-        ws = compute_w(alternative_table, list(df1)[crit])
-        alternative_matrix_buffer.append(ws)
-        if not consistency_check(alternative_table, ws, 1.12):
-            return
-        print("Матрица согласована")
-        print("-------------")
-        start_row += len(df1[list(df1)[0]]) + 2
+    for df in res:
+        df.to_excel(writer, startrow=start_row,
+                    index=False)
+        start_row += len(df) + 2
     writer.save()
-    alternative_matrix = np.array(alternative_matrix_buffer).transpose()
-    result = alternative_matrix.dot(criteria_matrix)
-    max = -1
-    best = ''
-    print("РЕЗУЛЬТАТ:")
-    for j in range(len(result)):
-        num = result[j]
-        if num > max:
-            max = num
-            best = df1[list(df1)[0]][j]
-        print(df1[list(df1)[0]][j], ": ", num)
-    print("ПОБЕДИТЕЛЬ: ", best, " со счетом ", max)
 
 
-def compute_w(dic, name="-"):
-    buf_res = []
-    sum_of_sum = 0
-    for i in range(len(dic[list(dic)[0]])):
-        sum = 1
-        for j in range(1, len(dic)):
-            sum *= dic[list(dic)[j]][i]
-        sum **= (1/5)
-        sum = round(sum, 3)
-        buf_res.append(sum)
-        sum_of_sum += sum
-    res = []
-    for i in range(len(buf_res)):
-        buf = buf_res[i] / sum_of_sum
-        print(name, " W", i, ": ", buf)
-        res.append(buf_res[i] / sum_of_sum)
-    return res
-
-
-def consistency_check(dic, ws, randIndex):
-    sum_of_sum = 0
-    for j in range(1, len(dic)):
-        sum = 0
-        for i in range(len(dic[list(dic)[0]])):
-            sum += dic[list(dic)[j]][i]
-        sum *= ws[j-1]
-        print("P", j, ": ", sum)
-        sum_of_sum += sum
-    index = (sum_of_sum - len(dic) + 1)/(len(dic) - 2)
-    print("OC: ", (index / randIndex))
-    return (index / randIndex) <= 0.1
-
-
-def pairwise_comparison(dict2, normalization, name1="-"):
-    res = {name1: []}
-    max_pass = max(dict2.values()) - min(dict2.values())
-    for name in dict2:
-        res[name1].append(name)
-        res[name] = []
-        for i in list(dict2):
-            res[name].append(0)
-    for i in range(len(dict2)):
-        for j in range(i, len(dict2)):
-            num = round(abs(list(dict2.values())[i] - list(dict2.values())[j]) / max_pass * (normalization - 1)) + 1
-            if list(dict2.values())[i] > list(dict2.values())[j]:
-                res[list(res)[j + 1]][i] = num
-                res[list(res)[i + 1]][j] = 1 / num
-            else:
-                res[list(res)[i + 1]][j] = num
-                res[list(res)[j + 1]][i] = 1 / num
-    return res
-
-
-mai("C:\\Users\\zaxar\\OneDrive\\Документы\\ВУЗ\\Теория принятия решений\\МАИ", "mai.xls", "res.xlsx")
+simplex("Starting.xls", "Result.xlsx")
