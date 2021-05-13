@@ -1,6 +1,5 @@
 import pandas as pd
-import xlsxwriter
-
+import numpy as np
 
 def simplex_recurs(df):
     # Вычисляем разрешающий столбец
@@ -107,6 +106,66 @@ def simplex_recurs(df):
     return res
 
 
+def dual_task(df, basis_list):
+    for i in range(5):
+        print()
+    print("ДВОЙСТВЕННАЯ ЗАДАЧА")
+    target = ""
+    limitations = []
+    # Заносим правую часть неравенства для ограничений
+    for i in range(len(df) - 3):
+        limitations.append(str(0 - df["X" + str(i + 1)][len(df["X" + str(i + 1)]) - 1]) + " <= ")
+    for i in range(len(df["A"]) - 1):
+        if i != 0:
+            target += " + "
+        # Создаем целевую функцию
+        target += str(df["A"][i]) + "y" + str((i + 1))
+        # Создаем ограничения
+        for j in range(len(df) - 3):
+            if i != 0:
+                limitations[j] += " + "
+            limitations[j] += str(df["X" + str(j + 1)][i]) + "y" + str((i + 1))
+    print("Целевая функция: ")
+    print(target)
+    print("Ограничения: ")
+    for i in range(len(df) - 3):
+        print(limitations[i])
+    # Создаем матрицу обратную D матрицу из векторов A
+    D = []
+    for x in basis_list:
+        try:
+            res = df[x].tolist()
+            res.pop(len(res) - 1)
+            D.append(res)
+        except Exception:
+            res = [0 for i in range(len(basis_list))]
+            res[int(x[1]) - (len(df) - 2)] = 1
+            D.append(res)
+    print("Матрица D:")
+    print(np.array(D).transpose())
+    Drev = np.linalg.inv(np.array(D).transpose())
+    print("Обратная D матрица:")
+    print(Drev)
+    # Создаем вектор Cb из коэффициентов C
+    Cb = []
+    for x in basis_list:
+        try:
+            Cb.append(0 - df[x][len(basis_list)])
+        except Exception:
+            Cb.append(0)
+    print("Вектор Cb:")
+    print(Cb)
+    # Получаем вектор y
+    y = np.array(Cb).dot(Drev)
+    print("Вектор y:")
+    print(y)
+    res = 0
+    for i in range(len(df["A"]) - 1):
+        res += df["A"][i] * y[i]
+    print("Значение целевой функции:")
+    print(round(res, 0))
+
+
 def simplex(fileStart, fileResult):
     xl = pd.ExcelFile(fileStart)
     df1 = xl.parse(xl.sheet_names[0])
@@ -118,6 +177,9 @@ def simplex(fileStart, fileResult):
         df.to_excel(writer, startrow=start_row,
                     index=False)
         start_row += len(df) + 2
+    basis_list = res[len(res) - 1]["C"]
+    basis_list.pop(len(basis_list) - 1)
+    dual_task(df1, res[len(res) - 1]["C"])
     writer.save()
 
 
