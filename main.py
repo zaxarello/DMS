@@ -1,186 +1,226 @@
 import pandas as pd
-import numpy as np
+import sys
 
-def simplex_recurs(df):
-    # Вычисляем разрешающий столбец
-    print(df)
+
+def transport_task(df):
+    # Создаем списки запасов и требований узлов
+    stocks = list(df["Запасы"])
+    stocks.pop()
+    num_of_needs = len(df["Запасы"]) - 1
+    needs = []
+    reference_plan = df.copy(deep=True)
+    for i in range(1, len(df)):
+        needs.append(df["B" + str(i)][num_of_needs])
+        for j in range(num_of_needs):
+            reference_plan.loc[j, "B" + str(i)] = 0
+    # Применяем метод северо-западного узла
+    reference_plan_north = reference_plan.copy(deep=True)
+    reference_plan_minmax = reference_plan.copy(deep=True)
+    equations_plan_north = []
+    equations_plan_minmax = []
+    min_north = northwest_corner(reference_plan_north, equations_plan_north, df, stocks.copy(), needs.copy())
+    min_min_max = min_max(reference_plan_minmax, equations_plan_minmax, df, stocks.copy(), needs.copy())
+    print("Опорный план северо-западного узла")
+    print(reference_plan_north)
+    print("F(северо-западный узел) =", min_north)
     print()
-    min = 0
-    column = ""
-    for i in range(1, len(df) - 2):
-        key = list(df)[i]
-        mass = df[key]
-        if mass[len(mass) - 1] < min:
-            min = mass[len(mass) - 1]
-            column = key
-    print("Число", min, "является минимальной отрицательной относительной оценкой. Находится в столбце", column)
+    print("Опорный план минимальной стоимости")
+    print(reference_plan_minmax)
+    print("F(минимальная стоимость) =", min_min_max)
     print()
-    # Вычисляем разрешающую строку
-    massA = df["A"]
-    massColumn = df[column]
-    raw = 0
-    min = -1
-    for i in range(len(massA) - 1):
-        if float(massColumn[i]) <= 0:
-            continue
-        num = float(massA[i]) / float(massColumn[i])
-        if min == -1 or num < min:
+    writer = pd.ExcelWriter("Result.xlsx", engine='xlsxwriter')
+    if len(equations_plan_minmax) != (len(needs) + len(stocks) - 1):
+        print("План минимальной стоимости является вырожденным, выбираем северо-западный узел")
+        recurs_transport(df, reference_plan_north, equations_plan_north, writer, 0)
+    else:
+        if min_north <= min_min_max:
+            print("План северо-западного узла является более оптимальным, выбираем его")
+            recurs_transport(df, reference_plan_north, equations_plan_north, writer, 0)
+        else:
+            print("План минимальной стоимости является более оптимальным, выбираем его")
+            recurs_transport(df, reference_plan_minmax, equations_plan_minmax, writer, 0)
+
+
+def northwest_corner(reference_plan, equations, df, stocks, needs):
+    sum = 0
+    for i in range(len(stocks)):
+        for j in range(len(needs)):
+            if needs[j] != 0:
+                equations.append([i, j, df.loc[i, "B" + str(j + 1)]])
+                if stocks[i] < needs[j]:
+                    reference_plan.loc[i, "B" + str(j + 1)] = stocks[i]
+                    needs[j] = needs[j] - stocks[i]
+                    stocks[i] = 0
+                    sum += reference_plan.loc[i, "B" + str(j + 1)] * df.loc[i, "B" + str(j + 1)]
+                    break
+                else:
+                    reference_plan.loc[i, "B" + str(j + 1)] = needs[j]
+                    stocks[i] = stocks[i] - needs[j]
+                    needs[j] = 0
+                sum += reference_plan.loc[i, "B" + str(j + 1)] * df.loc[i, "B" + str(j + 1)]
+    return sum
+
+
+def min_max(reference_plan, equations, df, stocks, needs):
+    null_needs = 0
+    sum = 0
+    while null_needs != len(needs):
+        min_c = sys.maxsize
+        cords = []
+        for i in range(1, len(df)):
+            for j in range(len(df["B" + str(i)]) - 1):
+                if needs[i - 1] != 0 and stocks[j] != 0 and df.loc[j, "B" + str(i)] < min_c:
+                    min_c = df.loc[j, "B" + str(i)]
+                    cords.clear()
+                    cords.append(j)
+                    cords.append(i - 1)
+        equations.append([cords[0], cords[1], df.loc[cords[0], "B" + str(cords[1] + 1)]])
+        if stocks[cords[0]] < needs[cords[1]]:
+            needs[cords[1]] = needs[cords[1]] - stocks[cords[0]]
+            reference_plan.loc[cords[0], "B" + str(cords[1] + 1)] = stocks[cords[0]]
+            stocks[cords[0]] = 0
+        else:
+            stocks[cords[0]] = stocks[cords[0]] - needs[cords[1]]
+            reference_plan.loc[cords[0], "B" + str(cords[1] + 1)] = needs[cords[1]]
+            needs[cords[1]] = 0
+            null_needs += 1
+        sum += reference_plan.loc[cords[0], "B" + str(cords[1] + 1)] * df.loc[cords[0], "B" + str(cords[1] + 1)]
+    return sum
+
+
+def recurs_transport(df, table, equations, writer, step):
+    print("------------------------")
+    table.to_excel(writer, startrow=step, index=False)
+    min_v = solving_equations(equations.copy(), df, table)
+    # Если нет отрицательных оценок, то завершаем выполнение
+    if min_v[2] >= 0:
+        print("Получено оптимальное решение!")
+        df.to_excel(writer, startrow=(step + 10), index=False)
+        writer.save()
+        return
+    # Получаем транспонированную матрицу значений
+    matrix = []
+    for i in range(1, len(table)):
+        buf = list(table["B" + str(i)])
+        buf.pop()
+        matrix.append(buf)
+    vertexes = precycle(matrix, min_v[1], min_v[0])
+    min = sys.maxsize
+    # Ищем минимальное значение среди вершин
+    print()
+    print(vertexes)
+    for i in range(1, len(vertexes), 2):
+        vertex = vertexes[i]
+        num = table.loc[vertex[1], "B" + str(vertex[0] + 1)]
+        if num < min and num != 0:
             min = num
-            raw = i
-    print("Отношение элемента А столбца к элементу разрешающего столбца равное", min, "является минимальным "
-                                                                                      "положительным отношением. "
-                                                                                      "Следовательно строка под "
-                                                                                      "номером", raw + 1,
-          "является разрешающей строкой.")
+    # Уменьшаем и увеличиваем вершины в цикле
+    print("Минимальное значение:", min)
+    sum = 0
+    for vertex in vertexes:
+        table.loc[vertex[1], "B" + str(vertex[0] + 1)] = table.loc[vertex[1], "B" + str(vertex[0] + 1)] + min
+        sum += df.loc[vertex[1], "B" + str(vertex[0] + 1)] * table.loc[vertex[1], "B" + str(vertex[0] + 1)]
+        # Удаляем нулевые уравнений
+        if table.loc[vertex[1], "B" + str(vertex[0] + 1)] == 0:
+            for equation in equations:
+                if equation[0] == vertex[1] and equation[1] == vertex[0]:
+                    equations.remove(equation)
+        min = 0 - min
+    # Добавляем новое уравнение
+    equations.append([min_v[0], min_v[1], df.loc[min_v[0], "B" + str(min_v[1] + 1)]])
     print()
-    if min == -1:
-        raise Exception("Целевая функция не ограничена")
-    resolution_element = df[column][raw]
-    print("Число", resolution_element, "является разрешающим элементом")
+    print(table)
     print()
-    # column - ключ разрещающего столбца, raw - номер разрещающей строки, resolution_element - разрещающий элемент
-    # Формируем новую таблицу
-    newDf = dict()
-    # Заолняем первый столбец
-    newDf["C"] = []
-    for i in range(len(massA) - 1):
-        if i == raw:
-            newDf["C"].append(column)
-        else:
-            newDf["C"].append(df["C"][i])
-    newDf["C"].append("F")
-    final = True
-    # Заполняем остальные строки
-    for key in df:
-        if key == "C":
-            continue
-        # Отдельно заполняем разрещающий столбец
-        if key == column:
-            newDf[df["C"][raw]] = []
-            for i in range(len(df[key])):
-                # Отдельно заполняем разрещающий элемент
-                if i == raw:
-                    print("Для столбца", key, "и строки под номером", i + 1,
-                          "вычисляем новый элемент через деление разрешающего элемента на единицу. 1 /",
-                          df[key][i], " =", 1 / df[key][i])
-                    print()
-                    newDf[df["C"][raw]].append(1 / df[key][i])
-                else:
-                    print("Для столбца", key, "и строки под номером", i + 1,
-                          "вычисляем новый элемент через деление элемента на разрешающий элемент и изменение знака. 0 -",
-                          df[key][i], " /", resolution_element, " =", 0 - df[key][i] / resolution_element)
-                    print()
-                    newDf[df["C"][raw]].append(0 - df[key][i] / resolution_element)
-                if i == len(df[key]) - 1 and newDf[df["C"][raw]][i] < 0:
-                    final = False
-        else:
-            newDf[key] = []
-            for i in range(len(df[key])):
-                # Отдельно заполняем разрещающую строку
-                if i == raw:
-                    print("Для столбца", key, "и строки под номером", i + 1,
-                          "вычисляем новый элемент через деление элемента на разрешающий элемент.",
-                          df[key][i], " /", resolution_element, " =", df[key][i] / resolution_element)
-                    print()
-                    newDf[key].append(df[key][i] / resolution_element)
-                # Заполняем все остальные элементы через прямоугольник
-                else:
-                    print("Для столбца", key, "и строки под номером", i + 1,
-                          "вычисляем новый элемент через правило прямоугольника. Получаем ",
-                          (df[key][i] * resolution_element - df[column][i] * df[key][raw]) / resolution_element)
-                    print()
-                    newDf[key].append(
-                        (df[key][i] * resolution_element - df[column][i] * df[key][raw]) / resolution_element)
-                if i == len(df[key]) - 1 and key != "A" and newDf[key][i] < 0:
-                    final = False
-    res = [pd.DataFrame(newDf)]
-    if final:
-        return res
-    # Если остались отрицательные дельты, то продолжаем выполнение
+    print("F =", sum)
     print()
-    print()
-    print("------------------------------------------")
-    print()
-    print()
-    res.extend(simplex_recurs(pd.DataFrame(newDf)))
+    recurs_transport(df, table, equations, writer, step + 10)
+
+
+def precycle(matrix, y, x):
+    cords = [[y, x]]
+    # Проверяем горизонтальное и вертикальное направления
+    if not cycle(matrix, cords, True):
+        cycle(matrix, cords, False)
+    return cords
+
+
+def cycle(matrix, cords, vertical):
+    final_cord = cords[0]
+    cord = cords[len(cords) - 1]
+    if vertical:
+        x = cord[1]
+        # Проверяем на возвращение в исходную точку
+        if len(cords) != 1 and x == final_cord[1]:
+            return True
+        # Собираем y, которые уже были с этим x
+        ys = []
+        for old_cord in cords:
+            if old_cord[1] == x:
+                ys.append(old_cord[0])
+        for y in range(len(matrix)):
+            # Ищем новые вершины
+            if not ys.__contains__(y) and matrix[y][x] != 0:
+                cords.append([y, x])
+                if cycle(matrix, cords, False):
+                    return True
+                cords.pop()
+    else:
+        y = cord[0]
+        # Проверяем на возвращение в исходную точку
+        if len(cords) != 1 and y == final_cord[0]:
+            return True
+        # Собираем x, которые уже были с этим y
+        xs = []
+        for old_cord in cords:
+            if old_cord[0] == y:
+                xs.append(old_cord[1])
+        for x in range(len(matrix[0])):
+            # Ищем новые вершины
+            if not xs.__contains__(x) and matrix[y][x] != 0:
+                cords.append([y, x])
+                if cycle(matrix, cords, True):
+                    return True
+                cords.pop()
+    return False
+
+
+def solving_equations(equations, df, table):
+    # Решаем систему уравнений
+    min = sys.maxsize
+    res = []
+    u = [sys.maxsize for i in range(len(df) - 1)]
+    y = [sys.maxsize for i in range(len(df["B1"]) - 1)]
+    u[equations[0][0]] = 0
+    print("U" + str(equations[0][0]), "=", 0)
+    while len(equations) != 0:
+        for equation in equations:
+            if u[equation[0]] != sys.maxsize:
+                print("U" + str(equation[0]), "+", "Y" + str(equation[1]), "=", equation[2])
+                new_y = equation[2] - u[equation[0]]
+                print("Y" + str(equation[1]), "=", new_y)
+                y[equation[1]] = new_y
+                equations.remove(equation)
+            else:
+                if y[equation[1]] != sys.maxsize:
+                    print("U" + str(equation[0]), "+", "Y" + str(equation[1]), "=", equation[2])
+                    new_u = equation[2] - y[equation[1]]
+                    print("U" + str(equation[0]), "=", new_u)
+                    u[equation[0]] = new_u
+                    equations.remove(equation)
+    # Высчитываем относительные оценки
+    for i in range(1, len(df)):
+        for j in range(len(df["B"+str(i)]) - 1):
+            if table.loc[j, "B"+str(i)] == 0:
+                v = df.loc[j, "B" + str(i)] - u[j] - y[i - 1]
+                print("V" + str(j) + str(i - 1), " = ", v)
+                if v < min:
+                    min = v
+                    res.clear()
+                    res = [j, i-1]
+    print("min:", min)
+    res.append(min)
     return res
 
 
-def dual_task(df, basis_list):
-    for i in range(5):
-        print()
-    print("ДВОЙСТВЕННАЯ ЗАДАЧА")
-    target = ""
-    limitations = []
-    # Заносим правую часть неравенства для ограничений
-    for i in range(len(df) - 3):
-        limitations.append(str(0 - df["X" + str(i + 1)][len(df["X" + str(i + 1)]) - 1]) + " <= ")
-    for i in range(len(df["A"]) - 1):
-        if i != 0:
-            target += " + "
-        # Создаем целевую функцию
-        target += str(df["A"][i]) + "y" + str((i + 1))
-        # Создаем ограничения
-        for j in range(len(df) - 3):
-            if i != 0:
-                limitations[j] += " + "
-            limitations[j] += str(df["X" + str(j + 1)][i]) + "y" + str((i + 1))
-    print("Целевая функция: ")
-    print(target)
-    print("Ограничения: ")
-    for i in range(len(df) - 3):
-        print(limitations[i])
-    # Создаем матрицу обратную D матрицу из векторов A
-    D = []
-    for x in basis_list:
-        try:
-            res = df[x].tolist()
-            res.pop(len(res) - 1)
-            D.append(res)
-        except Exception:
-            res = [0 for i in range(len(basis_list))]
-            res[int(x[1]) - (len(df) - 2)] = 1
-            D.append(res)
-    print("Матрица D:")
-    print(np.array(D).transpose())
-    Drev = np.linalg.inv(np.array(D).transpose())
-    print("Обратная D матрица:")
-    print(Drev)
-    # Создаем вектор Cb из коэффициентов C
-    Cb = []
-    for x in basis_list:
-        try:
-            Cb.append(0 - df[x][len(basis_list)])
-        except Exception:
-            Cb.append(0)
-    print("Вектор Cb:")
-    print(Cb)
-    # Получаем вектор y
-    y = np.array(Cb).dot(Drev)
-    print("Вектор y:")
-    print(y)
-    res = 0
-    for i in range(len(df["A"]) - 1):
-        res += df["A"][i] * y[i]
-    print("Значение целевой функции:")
-    print(round(res, 0))
-
-
-def simplex(fileStart, fileResult):
-    xl = pd.ExcelFile(fileStart)
-    df1 = xl.parse(xl.sheet_names[0])
-    res = simplex_recurs(df1)
-    writer = pd.ExcelWriter(fileResult, engine='xlsxwriter')
-    df1.to_excel(writer, index=False)
-    start_row = len(df1) + 2
-    for df in res:
-        df.to_excel(writer, startrow=start_row,
-                    index=False)
-        start_row += len(df) + 2
-    basis_list = res[len(res) - 1]["C"]
-    basis_list.pop(len(basis_list) - 1)
-    dual_task(df1, res[len(res) - 1]["C"])
-    writer.save()
-
-
-simplex("Starting.xls", "Result.xlsx")
+xl = pd.ExcelFile("Start.xls")
+transport_task(xl.parse(xl.sheet_names[0]))
